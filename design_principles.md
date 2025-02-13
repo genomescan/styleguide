@@ -1,11 +1,15 @@
 # Code design principles
+This document outlines a number of design principles for readable and extendable code. Most principles apply to any language, but some are more python/non-typed language specific
 
 1. ***Function names and parameters should be as clear as possible.*** Try and avoid i and j use instead index1 and index2 for instance
-2. ***Docstrings should be a single line explaining the meaning of a function or class.*** If input parameters are unclear you can explain them as well. Avoid explaining the type in the doctring, this should be clear from the provided typing (4). Try to avoid AI to generate doctrings, keep it consise and to the point
+2. ***Docstrings should start with a single line explaining the meaning of a function or class.*** If you need more space you can always add a double enter with a larger explanation. The main point is that users should be able to read quickly what a function is about. If you cannot explain it in one line the function might be too long (3). If input parameters need more clarification you can explain them after the explantion with a variable colon explanation. Avoid explaining the type in the doctring, this should be clear from the provided typing (4). Try to avoid AI to generate doctrings, keep it consise and to the point. 
 ```
 
 def create_chees_factory(flavor: str, size: int) -> CheeseFactory:
     """Creates a CheesFactory instance based on the provided flavor
+
+    This factory produces different cheeses but will not cover all options. If a provided option is not
+    present a NotImplementedError is raised
 
     size: size in square meters
     """
@@ -62,7 +66,7 @@ def sum(x: Addable, y: Addable) -> Addable:
     ...
 
 ```
-5. ***Functions or classes within modules that are not part of the API of that module should be protected or private.*** In python this can be (sort of) accomplished with the help of one or 2 starting underscores.
+5. ***Functions or classes within modules that are not part of the API of that module should be protected or private.*** This prevents other developers from using code not meant to be used outside the intended scope. In python this can be (sort of) accomplished with the help of one or 2 starting underscores.
 ```
 
 def create_butter() -> Butter:
@@ -70,6 +74,8 @@ def create_butter() -> Butter:
     # they are prefaced with an underscore to indicate that they should not be used outside this module
     clump_of_butter = _churn_milk()
     return _package_butter(clump_of_butter)
+
+...
 
 
 def __dont_use_me():
@@ -97,7 +103,7 @@ name = input_name if input_name is not None else ''
 name = input_name or ''
 
 ```
-7. ***Avoid reusing variables*** Meaning that you don't overwrite an existing variable with something new because you wont need the old variable anymore. This makes code hard and error prone to refactor
+7. ***Avoid reusing variables*** Meaning that you don't overwrite an existing variable with something new because you wont need the old variable anymore. This makes code hard to read and error prone to refactor. This also goes for builtin functions or variables in a higher scope. You can make an exception if you need to reuse a very memory heavy already allocated variable, since it can speed up code
 ```
 
 row = ["a", "b", "c"]
@@ -119,5 +125,34 @@ def create_row() -> List[str]:
 
 # finally avoid this scenario. Here we overwrite a builtin method
 list = []
+
+```
+8. ***Do not duplicate code*** It is a very easy way to introduce bugs at some future point by forgetting to change both parts. Duplicating a couple lines is fine, but more than that means that you will have to extract a function and call that instead.
+```
+
+# Here we duplicate a piece of code twice with the only change being the command that we input
+process = subprocess.run(['ls', '-lha'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+text = process.stdout.decode("utf-8")
+if process.returncode != 0:
+    raise RuntimeError(f"Failed command with message: {text}")
+
+process2 = subprocess.run(['du', '-sh'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+text2 = process.stdout.decode("utf-8")
+if process.returncode != 0:
+    raise RuntimeError(f"Failed command with message: {text2}")
+
+
+# instead it makes more sense to extract a function from this like so
+
+def run_command(command: List[str]) -> str:
+    process = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    text = process.stdout.decode("utf-8")
+    if process.returncode != 0:
+        raise RuntimeError(f"Failed command with message: {text}")
+    return text
+
+# then we can run it like this
+run_command(["ls", "-lha"])
+run_command(["du", "-sh"])
 
 ```
