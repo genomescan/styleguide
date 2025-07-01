@@ -64,7 +64,6 @@
 
 ## ⚙️ OPERATIONS
 
-- [ ] Use a managed service (e.g., AWS Elastic Beanstalk) if inexperienced.
 - [ ] Use proper provisioning scripts for VM setup.
 - [ ] Scan for machines with unnecessary open ports.
 - [ ] Remove default passwords, especially for MongoDB & Redis.
